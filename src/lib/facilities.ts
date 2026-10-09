@@ -45,6 +45,7 @@ export function buildGoogleMapsDirectionsUrl(lat: number, lng: number): string {
 export interface FacilitySearchResult {
   facilities: Facility[];
   hasApiAccess: boolean;
+  apiError?: boolean;
   message?: string;
 }
 
@@ -92,6 +93,7 @@ export async function searchNearbyFacilities(
     return {
       facilities: data.facilities || [],
       hasApiAccess: data.hasApiAccess ?? false,
+      apiError: data.apiError ?? false,
       message: data.message,
     };
   } catch {

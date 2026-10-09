@@ -341,13 +341,19 @@ interface NearbyPlacesResponse {
   places?: PlaceResult[];
 }
 
+interface PlacesSearchOutcome {
+  places: PlaceResult[];
+  error?: string;
+  status?: number;
+}
+
 async function searchGooglePlaces(
   apiKey: string,
   searchQuery: string,
   lat: number,
   lng: number,
   radiusMeters: number,
-): Promise<PlaceResult[]> {
+): Promise<PlacesSearchOutcome> {
   const url = "https://places.googleapis.com/v1/places:searchText";
   const body = {
     textQuery: searchQuery,
@@ -361,24 +367,39 @@ async function searchGooglePlaces(
     languageCode: "en",
   };
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask":
-        "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.primaryTypeDisplayName,places.types",
-    },
-    body: JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask":
+          "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.primaryTypeDisplayName,places.types",
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (networkErr) {
+    return { places: [], error: `Network error reaching Google Places API: ${(networkErr as Error).message}` };
+  }
 
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Google Places API error: ${response.status} ${errText}`);
+    const errText = await response.text().catch(() => "");
+    let userFriendly = `Google Places API returned HTTP ${response.status}`;
+    if (response.status === 400) {
+      userFriendly += " — Bad request. The search query or parameters may be invalid.";
+    } else if (response.status === 403) {
+      userFriendly += " — Access denied. Verify that the Places API (New) is enabled and billing is active on your Google Cloud project.";
+    } else if (response.status === 429) {
+      userFriendly += " — Rate limit exceeded. Too many requests in a short period.";
+    } else if (response.status >= 500) {
+      userFriendly += " — Google server error. Try again in a moment.";
+    }
+    return { places: [], error: userFriendly, status: response.status };
   }
 
   const data = (await response.json()) as NearbyPlacesResponse;
-  return data.places ?? [];
+  return { places: data.places ?? [] };
 }
 
 function haversineDistance(
@@ -433,31 +454,51 @@ Deno.serve(async (req: Request) => {
       }
 
       const categoryTerms: Record<string, string[]> = {
-        Plastic: ["plastic recycling center", "plastic waste collection"],
-        Paper: ["paper recycling center", "waste paper collection"],
-        Cardboard: ["cardboard recycling", "paper recycling center"],
-        Glass: ["glass recycling center", "glass bottle bank"],
-        Metal: ["scrap metal dealer", "metal recycling center"],
-        "Organic Waste": ["composting facility", "organic waste collection center"],
-        "Electronic Waste": ["e-waste collection center", "electronics recycling"],
-        Batteries: ["battery collection point", "battery recycling center"],
-        "Medical Waste": ["medical waste disposal facility", "biomedical waste collection"],
-        "Hazardous Waste": ["hazardous waste collection facility", "household hazardous waste disposal"],
-        Textile: ["textile recycling bin", "clothes collection point"],
-        Unknown: ["recycling center", "waste collection center"],
+        Plastic: ["recycling center", "plastic recycling", "scrap dealer"],
+        Paper: ["recycling center", "paper recycling", "waste management"],
+        Cardboard: ["recycling center", "paper recycling", "waste management"],
+        Glass: ["recycling center", "glass recycling", "scrap dealer"],
+        Metal: ["scrap dealer", "metal recycling", "recycling center"],
+        "Organic Waste": ["compost facility", "organic waste management", "waste management"],
+        "Electronic Waste": ["e-waste recycling", "electronics recycling", "recycling center"],
+        Batteries: ["battery recycling", "e-waste recycling", "recycling center"],
+        "Medical Waste": ["biomedical waste management", "medical waste disposal", "waste management"],
+        "Hazardous Waste": ["hazardous waste management", "waste management", "recycling center"],
+        Textile: ["clothes recycling bin", "textile recycling", "charity donation bin"],
+        Unknown: ["recycling center", "waste management", "scrap dealer"],
       };
 
       const searchQueries = categoryTerms[category || "Unknown"] || categoryTerms.Unknown;
       const radiusMeters = (radius_km || 5) * 1000;
 
       let allPlaces: PlaceResult[] = [];
+      const apiErrors: string[] = [];
+      let lastErrorStatus: number | undefined;
+
       for (const q of searchQueries) {
-        try {
-          const places = await searchGooglePlaces(googleKey, q, lat, lng, radiusMeters);
-          allPlaces = allPlaces.concat(places);
-        } catch {
-          // Continue with other queries
+        const outcome = await searchGooglePlaces(googleKey, q, lat, lng, radiusMeters);
+        if (outcome.places.length > 0) {
+          allPlaces = allPlaces.concat(outcome.places);
         }
+        if (outcome.error) {
+          apiErrors.push(outcome.error);
+          lastErrorStatus = outcome.status;
+        }
+      }
+
+      // If we got an API error on every query AND zero results, report the error
+      if (allPlaces.length === 0 && apiErrors.length > 0) {
+        // Pick the most informative error
+        const primaryError = apiErrors[0];
+        return new Response(
+          JSON.stringify({
+            facilities: [],
+            hasApiAccess: false,
+            apiError: true,
+            message: primaryError,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
 
       // Deduplicate by place id

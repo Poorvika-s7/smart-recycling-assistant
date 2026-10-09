@@ -253,14 +253,21 @@ export default function FacilitiesPage({ onNavigate, initialCategory }: Props) {
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <div className="flex items-start gap-3 mb-4">
-                <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle className={`w-6 h-6 flex-shrink-0 mt-0.5 ${searchResult.apiError ? 'text-red-500' : 'text-amber-500'}`} />
                 <div>
                   <h3 className="font-bold text-gray-900 mb-1">
-                    {searchResult.hasApiAccess
+                    {searchResult.apiError
+                      ? 'Facility search error'
+                      : searchResult.hasApiAccess
                       ? 'No facilities found in this area'
                       : 'Facility search not available'}
                   </h3>
                   <p className="text-sm text-gray-600">{searchResult.message}</p>
+                  {searchResult.apiError && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      Check that the Places API (New) is enabled and billing is active in your Google Cloud Console.
+                    </p>
+                  )}
                 </div>
               </div>
 
