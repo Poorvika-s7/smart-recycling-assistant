@@ -10,6 +10,8 @@ interface AnalysisRequest {
   item_name: string;
   location?: string;
   image_base64?: string;
+  language?: string;
+  language_instruction?: string;
 }
 
 interface AnalysisResponse {
@@ -19,6 +21,7 @@ interface AnalysisResponse {
   disposal_instructions: string;
   reuse_ideas: string;
   environmental_advice: string;
+  safety_precautions: string;
   estimated_co2_saved_kg: number;
   estimated_waste_diverted_kg: number;
   confidence: "high" | "medium" | "low";
@@ -36,6 +39,7 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
       disposal_instructions: "1. Check the recycling number (1-7) on the item.\n2. Rinse out residue.\n3. Types 1 (PET) and 2 (HDPE) are widely accepted.\n4. Check local guidelines for other types.\n5. Plastic bags need separate drop-off.",
       reuse_ideas: "Self-watering planters, storage containers, mosaic art from caps.",
       environmental_advice: "Plastic takes 400+ years to decompose. Recycling one bottle saves enough energy to power a 60W bulb for 3 hours.",
+      safety_precautions: "Rinse containers thoroughly. Do not recycle plastic with food residue. Sharp plastic edges can cause cuts.",
       estimated_co2_saved_kg: 0.05,
       estimated_waste_diverted_kg: 0.02,
       confidence: "medium",
@@ -46,6 +50,7 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
       disposal_instructions: "1. Ensure paper is clean and dry.\n2. Flatten and stack.\n3. Remove plastic windows from envelopes.\n4. Place in paper recycling bin.\n5. Bag shredded paper separately.",
       reuse_ideas: "Scratch notes, papier-mâché crafts, compost mulch.",
       environmental_advice: "Recycling one ton of paper saves 17 trees and 7,000 gallons of water.",
+      safety_precautions: "No special safety precautions needed. Avoid paper with chemical contamination.",
       estimated_co2_saved_kg: 0.5,
       estimated_waste_diverted_kg: 0.1,
       confidence: "medium",
@@ -56,6 +61,7 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
       disposal_instructions: "1. Remove tape and staples.\n2. Flatten boxes completely.\n3. Keep dry.\n4. Place in cardboard recycling.\n5. Separate greasy parts of pizza boxes.",
       reuse_ideas: "Drawer organizers, garden weed barriers, pet play structures.",
       environmental_advice: "Recycling one ton of cardboard saves 9 cubic yards of landfill space.",
+      safety_precautions: "Remove staples and tape to avoid injury. Be cautious of sharp edges.",
       estimated_co2_saved_kg: 0.3,
       estimated_waste_diverted_kg: 0.25,
       confidence: "medium",
@@ -66,6 +72,7 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
       disposal_instructions: "1. Rinse thoroughly.\n2. Remove lids (recycle separately).\n3. Don't include broken glass, light bulbs, or window glass.\n4. Sort by color if required.\n5. Place in glass recycling bin.",
       reuse_ideas: "Storage jars, candle holders, plant propagation vessels.",
       environmental_advice: "Glass is 100% recyclable and can be recycled endlessly without quality loss.",
+      safety_precautions: "Broken glass can cause serious cuts — wrap in newspaper before disposal.",
       estimated_co2_saved_kg: 0.15,
       estimated_waste_diverted_kg: 0.3,
       confidence: "medium",
@@ -76,6 +83,7 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
       disposal_instructions: "1. Rinse cans and containers.\n2. Remove paper labels.\n3. Crush to save space if local program allows.\n4. Place in metal recycling bin.\n5. Clean foil and ball up before recycling.",
       reuse_ideas: "Lanterns from punched cans, pencil holders, plant pots.",
       environmental_advice: "Recycling one aluminum can saves enough energy to run a TV for 3 hours.",
+      safety_precautions: "Be careful of sharp edges on cut metal or crushed cans. Wear gloves when handling scrap metal.",
       estimated_co2_saved_kg: 0.4,
       estimated_waste_diverted_kg: 0.03,
       confidence: "medium",
@@ -86,6 +94,7 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
       disposal_instructions: "1. Do NOT put in regular trash.\n2. Remove batteries.\n3. Wipe personal data.\n4. Take to e-waste collection point.\n5. Consider donation if device works.",
       reuse_ideas: "DIY electronics projects, external storage from old drives, component recovery.",
       environmental_advice: "One million cell phones contain 35,000 lbs of copper and 75 lbs of gold.",
+      safety_precautions: "CAUTION: E-waste contains hazardous materials like lead, mercury, and cadmium. Never burn or dismantle. Remove batteries. Wipe personal data. Wear gloves.",
       estimated_co2_saved_kg: 2.0,
       estimated_waste_diverted_kg: 0.5,
       confidence: "medium",
@@ -96,8 +105,53 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
       disposal_instructions: "1. Remove non-organic packaging.\n2. Place in compost bin.\n3. Balance green and brown materials.\n4. Avoid meat/dairy in home compost.\n5. Check for community composting.",
       reuse_ideas: "Vegetable broth from scraps, coffee ground fertilizer, eggshell calcium for soil.",
       environmental_advice: "Organic waste in landfills produces methane, 25x more potent than CO2.",
+      safety_precautions: "Avoid composting meat, dairy, and oils in home systems. Wash hands after handling food waste.",
       estimated_co2_saved_kg: 0.08,
       estimated_waste_diverted_kg: 0.15,
+      confidence: "medium",
+    },
+    battery: {
+      category: "Batteries",
+      recyclability: "non-recyclable",
+      disposal_instructions: "1. Do NOT put batteries in regular trash or recycling bins.\n2. Identify battery type: lithium-ion, alkaline, button cell, lead-acid.\n3. Tape terminals of lithium-ion batteries to prevent fires.\n4. Take to a designated battery collection point.\n5. For damaged batteries, contact hazardous waste facility.",
+      reuse_ideas: "Switch to rechargeable batteries. Trade in car batteries at auto parts stores.",
+      environmental_advice: "Batteries contain heavy metals that can leach into soil and water. One AA battery can contaminate 20,000 liters of water.",
+      safety_precautions: "DANGER: Batteries can leak toxic chemicals, cause fires, or explode. Never puncture, crush, or incinerate. Tape terminals. Keep away from children.",
+      estimated_co2_saved_kg: 0.3,
+      estimated_waste_diverted_kg: 0.1,
+      confidence: "medium",
+    },
+    medical: {
+      category: "Medical Waste",
+      recyclability: "non-recyclable",
+      disposal_instructions: "1. Do NOT put medical waste in regular trash.\n2. Place sharps in puncture-proof container.\n3. Seal and label 'SHARPS'.\n4. Take to medical waste collection point or pharmacy.\n5. Do not flush expired medicines.",
+      reuse_ideas: "Medical waste cannot be reused safely. Focus on proper disposal.",
+      environmental_advice: "Medical waste can spread infections. Improper pharmaceutical disposal contributes to antimicrobial resistance.",
+      safety_precautions: "BIOHAZARD: Wear gloves. Never recap used needles. Place sharps in puncture-proof containers. Keep away from children. Wash hands after handling.",
+      estimated_co2_saved_kg: 0,
+      estimated_waste_diverted_kg: 0,
+      confidence: "medium",
+    },
+    hazardous: {
+      category: "Hazardous Waste",
+      recyclability: "non-recyclable",
+      disposal_instructions: "1. Do NOT put in regular trash or recycling.\n2. Take to household hazardous waste collection facility.\n3. Keep in original containers with labels intact.\n4. Never mix different hazardous materials.\n5. Check local government website for collection dates.",
+      reuse_ideas: "Empty paint cans can be cleaned and used as storage. Use up products completely before disposal.",
+      environmental_advice: "Hazardous waste can contaminate soil and groundwater for decades. One gallon of motor oil can contaminate one million gallons of water.",
+      safety_precautions: "CAUTION: Hazardous waste can be toxic, flammable, or corrosive. Keep in original containers. Never mix materials. Wear gloves. Store away from children.",
+      estimated_co2_saved_kg: 0,
+      estimated_waste_diverted_kg: 0,
+      confidence: "medium",
+    },
+    textile: {
+      category: "Textile",
+      recyclability: "depends-on-local-rules",
+      disposal_instructions: "1. If in good condition, donate to charity.\n2. If worn out, check for textile recycling bins.\n3. Some retailers offer in-store collection.\n4. Clean and dry before donation.\n5. Pair shoes together.",
+      reuse_ideas: "Turn t-shirts into cleaning rags, cut fabric for patches, stuff pillows with old textiles.",
+      environmental_advice: "The fashion industry produces 10% of global carbon emissions. Recycling textiles saves 2,700 liters of water per garment.",
+      safety_precautions: "Wash items before donation. Check for mold if stored damp.",
+      estimated_co2_saved_kg: 1.5,
+      estimated_waste_diverted_kg: 0.4,
       confidence: "medium",
     },
   };
@@ -108,8 +162,12 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
     cardboard: "cardboard", box: "cardboard", carton: "cardboard",
     glass: "glass", jar: "glass",
     metal: "metal", aluminum: "metal", can: "metal", tin: "metal", steel: "metal", foil: "metal",
-    electronic: "electronic", phone: "electronic", laptop: "electronic", computer: "electronic", charger: "electronic", battery: "electronic", cable: "electronic",
+    electronic: "electronic", phone: "electronic", laptop: "electronic", computer: "electronic", charger: "electronic", cable: "electronic",
     food: "food", organic: "food", fruit: "food", vegetable: "food", peel: "food", compost: "food",
+    battery: "battery", batteries: "battery",
+    medical: "medical", syringe: "medical", needle: "medical", medicine: "medical", pharmaceutical: "medical", sharps: "medical",
+    paint: "hazardous", oil: "hazardous", chemical: "hazardous", pesticide: "hazardous", solvent: "hazardous", bleach: "hazardous", asbestos: "hazardous", mercury: "hazardous",
+    clothes: "textile", clothing: "textile", shirt: "textile", fabric: "textile", shoe: "textile", textile: "textile",
   };
 
   for (const [keyword, catKey] of Object.entries(keywordMap)) {
@@ -126,6 +184,7 @@ function fallbackAnalysis(itemName: string): AnalysisResponse {
     disposal_instructions: "1. Check for recycling symbols.\n2. Look up local recycling guidelines.\n3. When in doubt, keep it out of recycling.\n4. Consider reuse or donation.",
     reuse_ideas: "Consider if the item could be repurposed, donated, or given to someone who needs it.",
     environmental_advice: "Every item kept out of landfill makes a difference. Check local guidelines when unsure.",
+    safety_precautions: "When unsure, treat with caution. Wear gloves when handling unknown waste.",
     estimated_co2_saved_kg: 0,
     estimated_waste_diverted_kg: 0,
     confidence: "low",
@@ -140,19 +199,25 @@ async function callOpenAI(
   imageBase64: string | undefined,
   isChat: boolean,
   chatHistory: Array<{ role: string; content: string }> | undefined,
+  language: string,
+  languageInstruction: string,
 ): Promise<AnalysisResponse | { chat_response: string; source: string }> {
   const systemPrompt = `You are an expert recycling and waste management assistant. Analyze the waste item and provide a structured response.
 
 Rules:
-- Identify the waste category from: Plastic, Paper, Cardboard, Glass, Metal, Electronic Waste, Organic Waste, Textile, Hazardous Waste, or Unknown.
+- Identify the waste category from: Plastic, Paper, Cardboard, Glass, Metal, Electronic Waste, Organic Waste, Batteries, Medical Waste, Hazardous Waste, Textile, or Unknown.
 - State recyclability as: "recyclable", "non-recyclable", or "depends-on-local-rules".
 - NEVER invent specific recycling regulations or nearby facilities. If local rules matter, advise the user to check local guidelines.
 - Provide practical, step-by-step disposal instructions.
 - Suggest at least 2 creative reuse or upcycling ideas.
 - Give honest environmental advice with widely-known facts only.
+- Provide important safety precautions, especially for hazardous waste, batteries, medical waste, and e-waste.
 - Express uncertainty when information is insufficient.
-- Estimated CO2 saved and waste diverted should be conservative estimates based on typical item weight. Use 0 if truly unknown.
+- Estimated CO2 saved and waste diverted should be conservative estimates. Use 0 if truly unknown.
 - If a location is provided, acknowledge it but do not invent location-specific rules.
+- If the description is unclear, ask a short follow-up question.
+
+${languageInstruction}
 
 ${imageBase64 ? "An image has been provided. Use it to help identify the item. If you cannot confidently identify it from the image, say so." : "No image was provided — analyze based on the item name only."}
 
@@ -164,6 +229,7 @@ Respond ONLY with valid JSON in this exact format:
   "disposal_instructions": "step-by-step instructions separated by \\n",
   "reuse_ideas": "reuse ideas separated by \\n",
   "environmental_advice": "environmental advice",
+  "safety_precautions": "important safety precautions",
   "estimated_co2_saved_kg": 0.0,
   "estimated_waste_diverted_kg": 0.0,
   "confidence": "high | medium | low"
@@ -184,7 +250,7 @@ Respond ONLY with valid JSON in this exact format:
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages,
-        max_tokens: 500,
+        max_tokens: 600,
         temperature: 0.7,
       }),
     });
@@ -218,7 +284,7 @@ Respond ONLY with valid JSON in this exact format:
         { role: "system", content: systemPrompt },
         { role: "user", content: userContent as object },
       ],
-      max_tokens: 600,
+      max_tokens: 700,
       temperature: 0.3,
     }),
   });
@@ -248,6 +314,7 @@ Respond ONLY with valid JSON in this exact format:
     disposal_instructions: (parsed.disposal_instructions as string) || "",
     reuse_ideas: (parsed.reuse_ideas as string) || "",
     environmental_advice: (parsed.environmental_advice as string) || "",
+    safety_precautions: (parsed.safety_precautions as string) || "",
     estimated_co2_saved_kg: Number(parsed.estimated_co2_saved_kg) || 0,
     estimated_waste_diverted_kg: Number(parsed.estimated_waste_diverted_kg) || 0,
     confidence: (parsed.confidence as AnalysisResponse["confidence"]) || "medium",
@@ -262,13 +329,15 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { item_name, location, image_base64, is_chat, chat_history, save_to_db } = body as {
+    const { item_name, location, image_base64, is_chat, chat_history, save_to_db, language, language_instruction } = body as {
       item_name?: string;
       location?: string;
       image_base64?: string;
       is_chat?: boolean;
       chat_history?: Array<{ role: string; content: string }>;
       save_to_db?: boolean;
+      language?: string;
+      language_instruction?: string;
     };
 
     if (!item_name || !item_name.trim()) {
@@ -285,6 +354,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const lang = language || "en";
+    const langInstruction = language_instruction || "Respond in English.";
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
 
     if (!openaiKey) {
@@ -297,7 +368,6 @@ Deno.serve(async (req: Request) => {
       }
 
       const fallback = fallbackAnalysis(item_name);
-      if (location) fallback.recyclability_note = `Local rules may apply in ${location}. Check your local recycling guidelines.`;
 
       if (save_to_db !== false) {
         await saveScan(fallback);
@@ -310,7 +380,7 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-      const result = await callOpenAI(openaiKey, item_name, location, image_base64, !!is_chat, chat_history);
+      const result = await callOpenAI(openaiKey, item_name, location, image_base64, !!is_chat, chat_history, lang, langInstruction);
 
       if (!is_chat && save_to_db !== false) {
         await saveScan(result as AnalysisResponse);
@@ -369,12 +439,13 @@ async function saveScan(result: AnalysisResponse): Promise<void> {
       disposal_instructions: result.disposal_instructions,
       reuse_ideas: result.reuse_ideas,
       environmental_advice: result.environmental_advice,
+      safety_precautions: result.safety_precautions || null,
       estimated_co2_saved_kg: result.estimated_co2_saved_kg,
       estimated_waste_diverted_kg: result.estimated_waste_diverted_kg,
       analysis_mode: result.source,
     });
   } catch {
-    // Non-critical — don't fail the request if DB save fails
+    // Non-critical
   }
 }
 
@@ -388,7 +459,7 @@ function generateFallbackChat(
 
   const greetings = ["hello", "hi", "hey", "good morning"];
   if (greetings.some((g) => lower.includes(g))) {
-    return "Hello! I am the Smart Recycling Assistant (running in offline mode). I can help you identify waste items and give recycling advice. Type an item name like 'plastic bottle' or ask a recycling question!";
+    return "Hello! I am the Smart Recycling Assistant (running in offline mode — built-in knowledge base). I can help you identify waste items and give recycling advice. Type an item name like 'plastic bottle' or ask a recycling question!";
   }
 
   if (lower.includes("thank")) {
@@ -397,15 +468,15 @@ function generateFallbackChat(
 
   const fallback = fallbackAnalysis(message);
   if (fallback.category !== "Unknown") {
-    return `Here is what I found for "${fallback.item_name}":\n\nCategory: ${fallback.category}\nRecyclability: ${fallback.recyclability.replace(/-/g, " ")}\n\nDisposal:\n${fallback.disposal_instructions}\n\nReuse ideas:\n${fallback.reuse_ideas}`;
+    return `Here is what I found for "${fallback.item_name}":\n\nCategory: ${fallback.category}\nRecyclability: ${fallback.recyclability.replace(/-/g, " ")}\n\nDisposal:\n${fallback.disposal_instructions}\n\nSafety:\n${fallback.safety_precautions}\n\nReuse ideas:\n${fallback.reuse_ideas}`;
   }
 
   if (contextItem) {
     const ctx = fallbackAnalysis(contextItem);
-    if (lower.includes("recycl") || lower.includes("dispose") || lower.includes("bin")) {
+    if (lower.includes("recycl") || lower.includes("dispose") || lower.includes("bin") || lower.includes("throw")) {
       return `For ${ctx.item_name}: ${ctx.recyclability === "recyclable" ? "This is recyclable." : ctx.recyclability === "non-recyclable" ? "This is not recyclable through standard programs." : "Recyclability depends on local rules."}\n\n${ctx.disposal_instructions}`;
     }
   }
 
-  return "I'm running in offline mode (no AI API key configured), but I can still help with common items like plastic bottles, paper, cardboard, glass, metal, electronics, and food waste. Try typing one of those, or ask a general recycling question!";
+  return "I'm running in offline mode (no AI API key configured), but I can still help with common items like plastic bottles, paper, cardboard, glass, metal, electronics, batteries, medical waste, and food waste. Try typing one of those, or ask a general recycling question!";
 }

@@ -1,5 +1,6 @@
 import type { AnalysisResult, ChatMessage } from './supabase';
 import { analyzeItem, generateFallbackChatResponse } from './recyclingEngine';
+import { LANGUAGE_INSTRUCTIONS } from './languages';
 
 const EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recycle-ai`;
 
@@ -47,6 +48,7 @@ export async function analyzeWasteItem(
       disposal_instructions: data.disposal_instructions,
       reuse_ideas: data.reuse_ideas,
       environmental_advice: data.environmental_advice,
+      safety_precautions: data.safety_precautions || '',
       estimated_co2_saved_kg: data.estimated_co2_saved_kg,
       estimated_waste_diverted_kg: data.estimated_waste_diverted_kg,
       confidence: data.confidence || 'medium',
@@ -65,12 +67,14 @@ export async function sendChatMessage(
   message: string,
   history: ChatMessage[],
   contextItem?: string,
+  language?: string,
 ): Promise<{ content: string; source: 'ai' | 'fallback' }> {
   if (!message.trim()) {
     return { content: 'Please type a message.', source: 'fallback' };
   }
 
   const chatHistory = history.map((m) => ({ role: m.role, content: m.content }));
+  const langInstruction = LANGUAGE_INSTRUCTIONS[language || 'en'] || LANGUAGE_INSTRUCTIONS.en;
 
   try {
     const response = await fetch(EDGE_FUNCTION_URL, {
@@ -81,6 +85,8 @@ export async function sendChatMessage(
         is_chat: true,
         chat_history: chatHistory,
         save_to_db: false,
+        language: language || 'en',
+        language_instruction: langInstruction,
       }),
     });
 

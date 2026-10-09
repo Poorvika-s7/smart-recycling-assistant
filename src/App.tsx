@@ -1,18 +1,20 @@
 import { useState, useCallback } from 'react';
-import { Leaf, ScanLine, MessageCircle, BarChart3, History, Info, Menu, X } from 'lucide-react';
+import { Leaf, ScanLine, MessageCircle, BarChart3, History, Info, Menu, X, MapPin } from 'lucide-react';
 import HomePage from '@/components/pages/HomePage';
 import ScannerPage from '@/components/pages/ScannerPage';
 import ChatPage from '@/components/pages/ChatPage';
 import DashboardPage from '@/components/pages/DashboardPage';
 import HistoryPage from '@/components/pages/HistoryPage';
 import AboutPage from '@/components/pages/AboutPage';
+import FacilitiesPage from '@/components/pages/FacilitiesPage';
 
-type Page = 'home' | 'scanner' | 'chat' | 'dashboard' | 'history' | 'about';
+type Page = 'home' | 'scanner' | 'chat' | 'dashboard' | 'history' | 'about' | 'facilities';
 
 const NAV_ITEMS: { id: Page; label: string; icon: typeof Leaf }[] = [
   { id: 'home', label: 'Home', icon: Leaf },
   { id: 'scanner', label: 'Waste Scanner', icon: ScanLine },
   { id: 'chat', label: 'AI Assistant', icon: MessageCircle },
+  { id: 'facilities', label: 'Disposal Centres', icon: MapPin },
   { id: 'dashboard', label: 'Eco Dashboard', icon: BarChart3 },
   { id: 'history', label: 'History', icon: History },
   { id: 'about', label: 'About', icon: Info },
@@ -95,6 +97,7 @@ export default function App() {
         {page === 'home' && <HomePage onNavigate={navigate} />}
         {page === 'scanner' && <ScannerPage onNavigate={navigate} />}
         {page === 'chat' && <ChatPage />}
+        {page === 'facilities' && <FacilitiesPage onNavigate={navigate} />}
         {page === 'dashboard' && <DashboardPage onNavigate={navigate} />}
         {page === 'history' && <HistoryPage onNavigate={navigate} />}
         {page === 'about' && <AboutPage onNavigate={navigate} />}

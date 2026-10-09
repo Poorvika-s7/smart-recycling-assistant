@@ -12,6 +12,11 @@ import {
   Lightbulb,
   Leaf,
   Info,
+  Camera,
+  Type,
+  ShieldAlert,
+  MapPin as MapPinIcon,
+  Navigation,
 } from 'lucide-react';
 import {
   analyzeWasteItem,
@@ -20,8 +25,13 @@ import {
 } from '@/lib/api';
 import { supabase, type AnalysisResult, type NewScanInput } from '@/lib/supabase';
 import { IMAGES } from '@/lib/images';
+import LocationBar from '@/components/LocationBar';
+import CameraCapture from '@/components/CameraCapture';
+import { buildGoogleMapsSearchUrl, getSearchTermsForCategory } from '@/lib/facilities';
+import type { ResolvedLocation } from '@/lib/geolocation';
 
-type Page = 'home' | 'scanner' | 'chat' | 'dashboard' | 'history' | 'about';
+type Page = 'home' | 'scanner' | 'chat' | 'dashboard' | 'history' | 'about' | 'facilities';
+type ScanMode = 'describe' | 'upload' | 'camera';
 
 interface Props {
   onNavigate: (page: Page) => void;
@@ -35,15 +45,20 @@ const QUICK_ITEMS = [
   'Aluminum can',
   'Food scraps',
   'Newspaper',
+  'Old battery',
   'Old t-shirt',
+  'Expired medicine',
 ];
 
 export default function ScannerPage({ onNavigate }: Props) {
+  const [mode, setMode] = useState<ScanMode>('describe');
   const [itemName, setItemName] = useState('');
   const [location, setLocation] = useState('');
+  const [resolvedLocation, setResolvedLocation] = useState<ResolvedLocation | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
   const [imageFilename, setImageFilename] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -72,6 +87,15 @@ export default function ScannerPage({ onNavigate }: Props) {
     setImageBase64(base64);
   }, []);
 
+  const handleCameraCapture = useCallback((base64: string, previewUrl: string) => {
+    setImageBase64(base64);
+    setImagePreview(previewUrl);
+    setImageFilename('camera-capture.jpg');
+    setShowCamera(false);
+    setMode('upload');
+    setError(null);
+  }, []);
+
   const handleRemoveImage = useCallback(() => {
     setImagePreview(null);
     setImageBase64(undefined);
@@ -80,6 +104,16 @@ export default function ScannerPage({ onNavigate }: Props) {
       fileInputRef.current.value = '';
     }
   }, []);
+
+  const handleLocationDetected = (loc: ResolvedLocation) => {
+    setResolvedLocation(loc);
+    setLocation(loc.area || loc.displayName);
+  };
+
+  const handleManualLocation = (loc: string) => {
+    setLocation(loc);
+    setResolvedLocation(null);
+  };
 
   const handleAnalyze = async () => {
     if (!itemName.trim()) {
@@ -102,6 +136,7 @@ export default function ScannerPage({ onNavigate }: Props) {
         disposal_instructions: analysis.disposal_instructions,
         reuse_ideas: analysis.reuse_ideas,
         environmental_advice: analysis.environmental_advice,
+        safety_precautions: analysis.safety_precautions || null,
         estimated_co2_saved_kg: analysis.estimated_co2_saved_kg,
         estimated_waste_diverted_kg: analysis.estimated_waste_diverted_kg,
         analysis_mode: analysis.source,
@@ -127,10 +162,17 @@ export default function ScannerPage({ onNavigate }: Props) {
   const handleReset = () => {
     setItemName('');
     setLocation('');
+    setResolvedLocation(null);
     handleRemoveImage();
     setResult(null);
     setError(null);
     setSaved(false);
+  };
+
+  const handleFindFacilities = () => {
+    if (result) {
+      onNavigate('facilities');
+    }
   };
 
   const recyclabilityConfig = {
@@ -138,6 +180,16 @@ export default function ScannerPage({ onNavigate }: Props) {
     'non-recyclable': { label: 'Not Recyclable', color: 'red', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
     'depends-on-local-rules': { label: 'Depends on Local Rules', color: 'amber', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   };
+
+  const modeButtons: { id: ScanMode; label: string; icon: typeof Camera }[] = [
+    { id: 'camera', label: 'Scan with Camera', icon: Camera },
+    { id: 'upload', label: 'Upload Image', icon: Upload },
+    { id: 'describe', label: 'Describe Waste', icon: Type },
+  ];
+
+  const mapsSearchUrl = result && resolvedLocation
+    ? buildGoogleMapsSearchUrl(getSearchTermsForCategory(result.category)[0], resolvedLocation.coords)
+    : null;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
@@ -158,9 +210,43 @@ export default function ScannerPage({ onNavigate }: Props) {
           </div>
         </div>
         <p className="text-gray-600">
-          Type the item name or upload a photo to get recycling guidance.
+          Scan with your camera, upload a photo, or describe what you want to dispose of.
         </p>
       </div>
+
+      {/* Mode selector */}
+      <div className="flex gap-2 mb-6">
+        {modeButtons.map((btn) => (
+          <button
+            key={btn.id}
+            onClick={() => {
+              setMode(btn.id);
+              if (btn.id === 'camera') {
+                setShowCamera(true);
+              }
+            }}
+            className={`flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              mode === btn.id
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300 hover:text-emerald-700'
+            }`}
+          >
+            <btn.icon className="w-4 h-4" />
+            <span className="hidden sm:inline">{btn.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Camera modal */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => {
+            setShowCamera(false);
+            if (!imagePreview) setMode('describe');
+          }}
+        />
+      )}
 
       {/* Input Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -183,77 +269,92 @@ export default function ScannerPage({ onNavigate }: Props) {
         {/* Text input */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Item name
+            {mode === 'camera' ? 'Describe the item (optional)' : 'Item name or description'}
           </label>
           <input
             type="text"
             value={itemName}
             onChange={(e) => setItemName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !loading && handleAnalyze()}
-            placeholder="e.g. plastic bottle, old laptop, glass jar..."
+            placeholder="e.g. plastic bottle, old laptop, glass jar, expired batteries..."
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all text-gray-900"
             disabled={loading}
           />
         </div>
 
-        {/* Location input */}
+        {/* Location */}
         <div className="mb-4">
-          <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-            <MapPin className="w-4 h-4 text-gray-400" />
-            Location (optional)
-          </label>
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Mumbai, Malaysia, New York..."
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all text-gray-900"
-            disabled={loading}
+          <LocationBar
+            onLocationDetected={handleLocationDetected}
+            onManualLocation={handleManualLocation}
+            initialLocation={location}
+            compact
           />
-          <p className="text-xs text-gray-400 mt-1">
-            Recycling rules vary by region. We'll note this without inventing local regulations.
-          </p>
         </div>
 
-        {/* Image upload */}
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Photo (optional)
-          </label>
-          {imagePreview ? (
-            <div className="relative inline-block">
-              <img
-                src={imagePreview}
-                alt="Uploaded item"
-                className="max-h-48 rounded-xl border border-gray-200"
-              />
-              <button
-                onClick={handleRemoveImage}
-                className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
-                disabled={loading}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={loading}
-              className="w-full border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-xl py-8 flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/30 transition-all"
-            >
-              <ImageIcon className="w-8 h-8" />
-              <span className="text-sm font-medium">Click to upload a photo</span>
-              <span className="text-xs text-gray-400">JPG, PNG, WebP, or GIF (max 10MB)</span>
-            </button>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-        </div>
+        {/* Image area - shown for upload and camera modes */}
+        {(mode === 'upload' || mode === 'camera' || imagePreview) && (
+          <div className="mb-5">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Photo {mode === 'camera' ? '(from camera)' : '(optional)'}
+            </label>
+            {imagePreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={imagePreview}
+                  alt="Waste item"
+                  className="max-h-48 rounded-xl border border-gray-200"
+                />
+                <button
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+                  disabled={loading}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading}
+                  className="flex-1 border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-xl py-8 flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/30 transition-all"
+                >
+                  <ImageIcon className="w-8 h-8" />
+                  <span className="text-sm font-medium">Click to upload a photo</span>
+                  <span className="text-xs text-gray-400">JPG, PNG, WebP, or GIF (max 10MB)</span>
+                </button>
+                <button
+                  onClick={() => setShowCamera(true)}
+                  disabled={loading}
+                  className="flex-1 border-2 border-dashed border-gray-200 hover:border-emerald-300 rounded-xl py-8 flex flex-col items-center gap-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/30 transition-all"
+                >
+                  <Camera className="w-8 h-8" />
+                  <span className="text-sm font-medium">Open Camera</span>
+                  <span className="text-xs text-gray-400">Capture a photo directly</span>
+                </button>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </div>
+        )}
+
+        {/* Info note for image analysis */}
+        {imagePreview && (
+          <div className="mb-4 flex items-start gap-2 p-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-xs">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>
+              If an AI vision service is configured, the image will be analyzed to identify the waste item.
+              Otherwise, it is stored as a reference and analysis is based on your text description.
+            </span>
+          </div>
+        )}
 
         {/* Error message */}
         {error && (
@@ -363,6 +464,19 @@ export default function ScannerPage({ onNavigate }: Props) {
               </div>
             )}
 
+            {/* Safety precautions */}
+            {result.safety_precautions && (
+              <div className="mb-5">
+                <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-2">
+                  <ShieldAlert className="w-5 h-5 text-red-500" />
+                  Safety Precautions
+                </h3>
+                <div className="bg-red-50/50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed border border-red-100">
+                  {result.safety_precautions}
+                </div>
+              </div>
+            )}
+
             {/* Disposal instructions */}
             <div className="mb-5">
               <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-2">
@@ -394,6 +508,41 @@ export default function ScannerPage({ onNavigate }: Props) {
               <div className="bg-emerald-50/50 rounded-xl p-4 text-sm text-gray-700 leading-relaxed">
                 {result.environmental_advice}
               </div>
+            </div>
+          </div>
+
+          {/* Find nearby facilities */}
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100">
+            <div className="flex items-start gap-3 mb-3">
+              <MapPinIcon className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-gray-900">Find Nearby Disposal Centres</h3>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  {resolvedLocation
+                    ? `Search for facilities near ${resolvedLocation.area || resolvedLocation.displayName} that accept ${result.category}.`
+                    : 'Detect your location to find facilities that accept this type of waste.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={handleFindFacilities}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-700 transition-colors"
+              >
+                <Navigation className="w-4 h-4" />
+                Find Facilities
+              </button>
+              {mapsSearchUrl && (
+                <a
+                  href={mapsSearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-emerald-700 font-medium text-sm border border-emerald-200 hover:bg-emerald-50 transition-colors"
+                >
+                  <MapPinIcon className="w-4 h-4" />
+                  Open in Google Maps
+                </a>
+              )}
             </div>
           </div>
 

@@ -10,12 +10,15 @@ import {
   ArrowRight,
   CheckCircle2,
   Zap,
+  MapPin,
+  Camera,
+  Navigation,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { IMAGES } from '@/lib/images';
 
-type Page = 'home' | 'scanner' | 'chat' | 'dashboard' | 'history' | 'about';
+type Page = 'home' | 'scanner' | 'chat' | 'dashboard' | 'history' | 'about' | 'facilities';
 
 interface Props {
   onNavigate: (page: Page) => void;
@@ -69,7 +72,14 @@ export default function HomePage({ onNavigate }: Props) {
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white text-emerald-700 font-semibold shadow-xl hover:shadow-2xl transition-all hover:scale-105"
               >
                 <ScanLine className="w-5 h-5" />
-                Start Recycling
+                Scan Waste
+              </button>
+              <button
+                onClick={() => onNavigate('facilities')}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/10 backdrop-blur-sm text-white font-semibold border border-white/30 hover:bg-white/20 transition-all"
+              >
+                <MapPin className="w-5 h-5" />
+                Find Disposal Centres
               </button>
               <button
                 onClick={() => onNavigate('chat')}
@@ -82,7 +92,7 @@ export default function HomePage({ onNavigate }: Props) {
 
             {/* Trust badges */}
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-emerald-50/80">
-              {['Plastic', 'Paper', 'Glass', 'Metal', 'E-Waste', 'Organic'].map((cat) => (
+              {['Plastic', 'Paper', 'Glass', 'Metal', 'E-Waste', 'Organic', 'Batteries', 'Textile'].map((cat) => (
                 <span key={cat} className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-300" />
                   {cat}
@@ -124,22 +134,22 @@ export default function HomePage({ onNavigate }: Props) {
           {[
             {
               icon: ScanLine,
-              title: '1. Identify your item',
-              desc: 'Type the name of your waste item or upload a photo. The scanner accepts plastic, paper, glass, metal, electronics, and more.',
+              title: '1. Scan, upload, or describe',
+              desc: 'Use your camera to scan waste, upload a photo, or type what you want to dispose of. Supports plastic, paper, glass, metal, electronics, batteries, and more.',
               color: 'emerald',
               image: IMAGES.sortingHands,
             },
             {
               icon: Recycle,
-              title: '2. Get instant analysis',
-              desc: 'Our AI engine identifies the waste category, tells you if it is recyclable, and provides step-by-step disposal instructions.',
+              title: '2. Identify & get guidance',
+              desc: 'Get the waste category, recyclability status, step-by-step disposal instructions, safety precautions, and reuse ideas instantly.',
               color: 'blue',
               image: IMAGES.glassBottles,
             },
             {
-              icon: TrendingDown,
-              title: '3. Track your impact',
-              desc: 'Every scan is saved to your history. Watch your CO₂ savings and waste diverted from landfill grow over time.',
+              icon: MapPin,
+              title: '3. Find nearby facilities',
+              desc: 'Detect your location and find nearby disposal centres that accept your type of waste. Get directions in one tap.',
               color: 'teal',
               image: IMAGES.holdingPlant,
             },

@@ -1,13 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, Loader2, Sparkles, Info, Leaf } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageCircle, Send, Loader2, Sparkles, Info, Leaf, Mic, MicOff, Globe } from 'lucide-react';
 import { sendChatMessage } from '@/lib/api';
 import type { ChatMessage } from '@/lib/supabase';
+import { LANGUAGES, getLanguageByCode } from '@/lib/languages';
+import { isSpeechRecognitionSupported, createSpeechRecognition, startListening, type SpeechRecognitionLike } from '@/lib/speech';
 
 const SUGGESTED_QUESTIONS = [
   'Is a plastic bottle recyclable?',
   'How do I dispose of an old phone?',
   'What can I do with glass jars?',
   'Can I compost food scraps?',
+  'Where should I throw old batteries?',
 ];
 
 export default function ChatPage() {
@@ -15,14 +18,20 @@ export default function ChatPage() {
     {
       role: 'assistant',
       content:
-        "Hi! I'm the Smart Recycling Assistant. Ask me about any waste item — I can tell you if it's recyclable, how to dispose of it, and suggest reuse ideas. What would you like to know?",
+        "Hi! I'm the Smart Recycling Assistant. Ask me about any waste item — I can tell you if it's recyclable, how to dispose of it, and suggest reuse ideas. You can type or speak in English, Kannada, Hindi, and more. What would you like to know?",
       timestamp: new Date().toISOString(),
       source: 'fallback',
     },
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [language, setLanguage] = useState('en');
+  const [isListening, setIsListening] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const speechSupported = isSpeechRecognitionSupported();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,6 +40,52 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch {}
+      }
+    };
+  }, []);
+
+  const handleStartListening = useCallback(() => {
+    setSpeechError(null);
+    const recognition = createSpeechRecognition(language);
+    if (!recognition) {
+      setSpeechError('Speech recognition is not supported by your browser. Please type your message instead.');
+      return;
+    }
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    setInput('');
+
+    startListening(recognition, {
+      onResult: (result) => {
+        if (result.isFinal) {
+          setInput(result.transcript);
+          setIsListening(false);
+        } else {
+          setInput(result.transcript);
+        }
+      },
+      onError: (err) => {
+        setSpeechError(err);
+        setIsListening(false);
+      },
+      onEnd: () => {
+        setIsListening(false);
+      },
+    });
+  }, [language]);
+
+  const handleStopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+    setIsListening(false);
+  }, []);
 
   const handleSend = async (messageText?: string) => {
     const text = (messageText ?? input).trim();
@@ -47,7 +102,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const { content, source } = await sendChatMessage(text, [...messages, userMessage]);
+      const { content, source } = await sendChatMessage(text, [...messages, userMessage], undefined, language);
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content,
@@ -73,6 +128,7 @@ export default function ChatPage() {
   };
 
   const showSuggestions = messages.length <= 1;
+  const currentLang = getLanguageByCode(language);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
@@ -83,7 +139,7 @@ export default function ChatPage() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900">Chat with EcoBot</h1>
         <p className="mt-2 text-gray-600">
-          Ask any recycling or waste disposal question.
+          Ask any recycling or waste disposal question in your language.
         </p>
       </div>
 
@@ -157,16 +213,75 @@ export default function ChatPage() {
           </div>
         )}
 
+        {/* Speech error */}
+        {speechError && (
+          <div className="px-4 pb-2 text-xs text-amber-600 flex items-center gap-1.5">
+            <Info className="w-3 h-3" />
+            {speechError}
+          </div>
+        )}
+
         {/* Input */}
         <div className="border-t border-gray-100 p-3">
+          {/* Language selector + mic */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm text-gray-600 border border-gray-200 transition-colors"
+              >
+                <Globe className="w-4 h-4" />
+                <span>{currentLang.flag}</span>
+                <span className="hidden sm:inline">{currentLang.nativeLabel}</span>
+              </button>
+              {showLangDropdown && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowLangDropdown(false)} />
+                  <div className="absolute bottom-full mb-1 left-0 z-20 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[160px] max-h-64 overflow-y-auto animate-fade-in">
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setShowLangDropdown(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 ${
+                          language === lang.code ? 'text-emerald-600 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        <span className="text-xs font-bold w-6">{lang.flag}</span>
+                        <span>{lang.nativeLabel}</span>
+                        <span className="text-xs text-gray-400 ml-auto">{lang.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {speechSupported && (
+              <button
+                onClick={isListening ? handleStopListening : handleStartListening}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                  isListening
+                    ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                <span className="hidden sm:inline">{isListening ? 'Stop' : 'Speak'}</span>
+              </button>
+            )}
+          </div>
+
           <div className="flex gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Type your question..."
-              disabled={loading}
+              placeholder={isListening ? 'Listening...' : 'Type your question...'}
+              disabled={loading || isListening}
               className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all text-sm text-gray-900"
             />
             <button
