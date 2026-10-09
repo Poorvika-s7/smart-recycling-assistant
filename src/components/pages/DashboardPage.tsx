@@ -30,8 +30,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Organic Waste': '#84cc16',
   Textile: '#ec4899',
   'Hazardous Waste': '#7c2d12',
-  Batteries: '#f97316',
-  'Medical Waste': '#dc2626',
   Unknown: '#9ca3af',
 };
 

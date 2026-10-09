@@ -6,7 +6,6 @@ interface WasteCategory {
   disposalInstructions: string;
   reuseIdeas: string;
   environmentalAdvice: string;
-  safetyPrecautions: string;
   co2SavedKg: number;
   wasteDivertedKg: number;
   keywords: string[];
@@ -31,7 +30,6 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'Plastic takes 400+ years to decompose. Recycling one plastic bottle saves enough energy to power a 60W bulb for 3 hours. Reducing single-use plastic has the biggest impact.',
-    safetyPrecautions: 'Rinse containers thoroughly to avoid contamination. Do not recycle plastic with food residue. Sharp plastic edges can cause cuts — handle carefully.',
     co2SavedKg: 0.05,
     wasteDivertedKg: 0.02,
     keywords: ['plastic', 'bottle', 'PET', 'HDPE', 'container', 'wrapper', 'bag', 'plastic bottle', 'jug', 'tupperware', 'packaging', 'cling film', 'plastic cup', 'plastic container', 'yogurt cup'],
@@ -53,7 +51,6 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'Recycling one ton of paper saves approximately 17 trees, 7,000 gallons of water, and 4,000 kWh of electricity. Paper can be recycled 5-7 times before fibers become too short.',
-    safetyPrecautions: 'No special safety precautions needed. Avoid paper with chemical contamination or hazardous substance residue.',
     co2SavedKg: 0.5,
     wasteDivertedKg: 0.1,
     keywords: ['paper', 'newspaper', 'magazine', 'book', 'notebook', 'envelope', 'letter', 'printer paper', 'flyer', 'leaflet', 'receipt', 'cardstock', 'wrapping paper'],
@@ -75,7 +72,6 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'Recycling one ton of cardboard saves about 9 cubic yards of landfill space and 46 gallons of oil. Cardboard is one of the most recyclable materials and can be recycled up to 7 times.',
-    safetyPrecautions: 'Remove staples and tape to avoid injury. Be cautious of sharp edges from cut cardboard.',
     co2SavedKg: 0.3,
     wasteDivertedKg: 0.25,
     keywords: ['cardboard', 'box', 'carton', 'corrugated', 'shipping box', 'moving box', 'pizza box', 'cardboard box', 'packing box', 'delivery box', 'cardboard tube'],
@@ -97,7 +93,6 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'Glass is 100% recyclable and can be recycled endlessly without quality loss. Recycling one glass bottle saves enough energy to power a computer for 30 minutes. Glass takes over 1 million years to decompose in a landfill.',
-    safetyPrecautions: 'Broken glass can cause serious cuts — wrap in newspaper before disposal. Do not recycle light bulbs, window glass, or mirrors with containers as they have different melting points.',
     co2SavedKg: 0.15,
     wasteDivertedKg: 0.3,
     keywords: ['glass', 'jar', 'bottle', 'glass bottle', 'glass jar', 'wine bottle', 'beer bottle', 'glass container', 'glassware', 'tumbler', 'vase'],
@@ -120,7 +115,6 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'Aluminum can be recycled infinitely without quality loss. Recycling one aluminum can saves enough energy to run a TV for 3 hours. Mining bauxite for new aluminum is extremely energy-intensive — recycled aluminum uses 95% less energy.',
-    safetyPrecautions: 'Be careful of sharp edges on cut metal or crushed cans. Wear gloves when handling scrap metal.',
     co2SavedKg: 0.4,
     wasteDivertedKg: 0.03,
     keywords: ['metal', 'aluminum', 'can', 'tin can', 'steel', 'iron', 'copper', 'foil', 'aluminum foil', 'soda can', 'beer can', 'food can', 'tin', 'metal can', 'scrap metal', 'wire', 'bottle cap'],
@@ -143,10 +137,9 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'E-waste contains valuable metals like gold, silver, and copper, plus hazardous materials like lead and mercury. One million cell phones contain about 35,000 lbs of copper, 772 lbs of silver, and 75 lbs of gold. Never burn e-waste — it releases toxic fumes.',
-    safetyPrecautions: 'CAUTION: E-waste contains hazardous materials like lead, mercury, and cadmium. Never burn or dismantle electronics. Remove batteries before disposal. Wipe all personal data from devices. Wear gloves when handling old electronics.',
     co2SavedKg: 2.0,
     wasteDivertedKg: 0.5,
-    keywords: ['electronic', 'phone', 'laptop', 'computer', 'tablet', 'charger', 'cable', 'headphones', 'earbuds', 'electronic waste', 'e-waste', 'ewaste', 'circuit board', 'keyboard', 'mouse', 'monitor', 'camera', 'remote', 'toaster', 'microwave', 'appliance', 'electronic device', 'USB', 'power bank', 'speaker'],
+    keywords: ['electronic', 'phone', 'laptop', 'computer', 'tablet', 'charger', 'cable', 'battery', 'headphones', 'earbuds', 'electronic waste', 'e-waste', 'ewaste', 'circuit board', 'keyboard', 'mouse', 'monitor', 'camera', 'remote', 'toaster', 'microwave', 'appliance', 'electronic device', 'USB', 'power bank', 'speaker'],
   },
   {
     category: 'Organic Waste',
@@ -165,7 +158,6 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'Organic waste in landfills produces methane, a greenhouse gas 25x more potent than CO2. Composting diverts this waste and creates nutrient-rich soil. About 30% of household waste is compostable organic material.',
-    safetyPrecautions: 'Avoid composting meat, dairy, and oils in home systems as they attract pests and create odors. Wash hands after handling food waste.',
     co2SavedKg: 0.08,
     wasteDivertedKg: 0.15,
     keywords: ['food', 'organic', 'fruit', 'vegetable', 'peel', 'banana peel', 'apple', 'coffee grounds', 'tea bag', 'eggshell', 'food waste', 'compost', 'leftover', 'bread', 'rice', 'meat', 'bone', 'shell', 'biodegradable', 'garden waste', 'leaves', 'grass cutting'],
@@ -187,7 +179,6 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'The fashion industry produces 10% of global carbon emissions. Recycling textiles saves about 2,700 liters of water per garment (the water used to grow cotton for a single t-shirt). Only 15% of textiles are currently recycled.',
-    safetyPrecautions: 'Wash items before donation. Check for mold or contamination if items were stored damp.',
     co2SavedKg: 1.5,
     wasteDivertedKg: 0.4,
     keywords: ['clothes', 'clothing', 'shirt', 'pants', 'jeans', 'dress', 'fabric', 'textile', 'shoe', 'shoes', 'sneaker', 'jacket', 'sweater', 'sock', 't-shirt', 'textile waste', 'old clothes', 'fabric scrap'],
@@ -208,53 +199,9 @@ const CATEGORIES: WasteCategory[] = [
     ].join('\n'),
     environmentalAdvice:
       'Hazardous waste can contaminate soil and groundwater for decades. One gallon of improperly disposed motor oil can contaminate one million gallons of water. Always use designated disposal channels.',
-    safetyPrecautions: 'CAUTION: Hazardous waste can be toxic, flammable, or corrosive. Keep in original containers with labels intact. Never mix different hazardous materials. Wear gloves and avoid inhalation. Store away from children and pets.',
     co2SavedKg: 0,
     wasteDivertedKg: 0,
-    keywords: ['paint', 'oil', 'chemical', 'pesticide', 'motor oil', 'paint can', 'solvent', 'cleaning product', 'bleach', 'asbestos', 'nail polish', 'mercury', 'fluorescent bulb'],
-  },
-  {
-    category: 'Batteries',
-    recyclability: 'non-recyclable',
-    disposalInstructions: [
-      '1. Do NOT put batteries in regular trash or recycling bins — they require specialized recycling.',
-      '2. Identify battery type: lithium-ion, alkaline, button cell, lead-acid, or NiMH.',
-      '3. Tape the terminals of lithium-ion batteries with non-conductive tape to prevent fires.',
-      '4. Take to a designated battery collection point, electronics store, or recycling center.',
-      '5. Many retailers (hardware stores, electronics shops) have battery drop-off bins.',
-      '6. For damaged or swollen batteries, contact your local hazardous waste facility immediately.',
-    ].join('\n'),
-    reuseIdeas: [
-      'Rechargeable batteries can be reused hundreds of times — switch to rechargeables to reduce waste.',
-      'Old car batteries can be traded in at auto parts stores for credit.',
-    ].join('\n'),
-    environmentalAdvice:
-      'Batteries contain heavy metals like lead, mercury, cadmium, and lithium that can leach into soil and water. One AA battery can contaminate up to 20,000 liters of water. Recycling recovers valuable metals and prevents environmental contamination.',
-    safetyPrecautions: 'DANGER: Batteries can leak toxic chemicals, cause fires, or explode if damaged. Never puncture, crush, or incinerate batteries. Tape terminals of lithium batteries. Store in a cool, dry place away from metal objects. Keep away from children.',
-    co2SavedKg: 0.3,
-    wasteDivertedKg: 0.1,
-    keywords: ['battery', 'batteries', 'lithium battery', 'aa battery', 'aaa battery', 'button battery', 'coin cell', 'car battery', 'lithium-ion', 'nimh', 'lead acid battery', 'rechargeable battery', 'power bank battery', 'laptop battery', 'phone battery'],
-  },
-  {
-    category: 'Medical Waste',
-    recyclability: 'non-recyclable',
-    disposalInstructions: [
-      '1. Do NOT put medical waste in regular trash or recycling.',
-      '2. Sharps (needles, lancets, syringes): place in a puncture-proof container (hard plastic bottle or sharps container).',
-      '3. Seal the container and label it "SHARPS — DO NOT RECYCLE".',
-      '4. Take to a designated medical waste collection point, hospital, or pharmacy take-back program.',
-      '5. Expired medicines: do not flush or throw in trash — take to a pharmacy take-back program.',
-      '6. Contact your local health department for medical waste disposal guidelines.',
-    ].join('\n'),
-    reuseIdeas: [
-      'Medical waste cannot be reused safely. Focus on proper disposal to protect public health and the environment.',
-    ].join('\n'),
-    environmentalAdvice:
-      'Medical waste can spread infections and contaminate water supplies. Improper disposal of pharmaceuticals can lead to antibiotics in water systems, contributing to antimicrobial resistance. Always use designated disposal channels.',
-    safetyPrecautions: 'BIOHAZARD: Medical waste may carry infectious agents. Always wear gloves when handling. Never recap used needles. Place sharps in puncture-proof containers immediately after use. Keep all medical waste away from children and pets. Wash hands thoroughly after handling.',
-    co2SavedKg: 0,
-    wasteDivertedKg: 0,
-    keywords: ['medical waste', 'syringe', 'needle', 'medicine', 'expired medicine', 'pharmaceutical', 'drug', 'pill', 'tablet', 'bandage', 'gauze', 'insulin', 'injection', 'lancet', 'sharps', 'biomedical'],
+    keywords: ['paint', 'oil', 'chemical', 'pesticide', 'motor oil', 'battery', 'paint can', 'solvent', 'cleaning product', 'bleach', 'motor oil', 'asbestos', 'medical waste', 'syringe', 'medicine', 'expired medicine', 'nail polish', 'mercury', 'fluorescent bulb'],
   },
 ];
 
@@ -271,7 +218,6 @@ const UNCATEGORIZED_RESULT: Omit<WasteCategory, 'keywords'> = {
   reuseIdeas: 'Before disposing, consider if the item could be used for a different purpose, donated, or given to someone who needs it.',
   environmentalAdvice:
     'Every item kept out of a landfill makes a difference. When unsure about recyclability, the best choice is to check local guidelines or contact your waste management provider.',
-  safetyPrecautions: 'When unsure about an item, treat it with caution. Wear gloves when handling unknown waste and do not open sealed containers.',
   co2SavedKg: 0,
   wasteDivertedKg: 0,
 };
@@ -300,7 +246,6 @@ export function analyzeItem(itemName: string, location?: string): AnalysisResult
     disposal_instructions: data.disposalInstructions,
     reuse_ideas: data.reuseIdeas,
     environmental_advice: data.environmentalAdvice,
-    safety_precautions: data.safetyPrecautions,
     estimated_co2_saved_kg: data.co2SavedKg,
     estimated_waste_diverted_kg: data.wasteDivertedKg,
     confidence: bestMatch ? 'high' : 'low',

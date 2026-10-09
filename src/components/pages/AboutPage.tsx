@@ -1,5 +1,4 @@
 import { Leaf, Recycle, Sparkles, Globe, BarChart3, Users, Target, TrendingUp, Lightbulb, Heart } from 'lucide-react';
-import { IMAGES } from '@/lib/images';
 
 type Page = 'home' | 'scanner' | 'chat' | 'dashboard' | 'history' | 'about';
 
@@ -10,25 +9,16 @@ interface Props {
 export default function AboutPage({ onNavigate }: Props) {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-      {/* Hero with image */}
-      <div className="relative overflow-hidden rounded-3xl mb-10 h-56 sm:h-64">
-        <img
-          src={IMAGES.plasticBottles}
-          alt="Sorting plastic bottles for recycling"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/80 to-teal-800/70" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-white text-sm font-medium mb-3 border border-white/20">
-            <Leaf className="w-4 h-4" />
-            About Our Project
-          </div>
-          <h1 className="text-3xl font-bold text-white">Smart Recycling Assistant</h1>
-          <p className="mt-2 text-emerald-50/90 max-w-2xl">
-            An AI-powered tool that helps people identify waste, understand recyclability, and dispose
-            of items responsibly — built for the SINAR Hackathon.
-          </p>
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium mb-3">
+          <Leaf className="w-4 h-4" />
+          About Our Project
         </div>
+        <h1 className="text-3xl font-bold text-gray-900">Smart Recycling Assistant</h1>
+        <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
+          An AI-powered tool that helps people identify waste, understand recyclability, and dispose
+          of items responsibly — built for the SINAR Hackathon.
+        </p>
       </div>
 
       {/* Problem & Solution */}
