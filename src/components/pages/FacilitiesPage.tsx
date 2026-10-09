@@ -288,7 +288,7 @@ export default function FacilitiesPage({ onNavigate, initialCategory }: Props) {
                   <Radio className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>
                     To enable automatic facility search with real data, add a Google Maps API key
-                    with the Places API (New) enabled as the secret <code className="font-mono font-bold">GOOGLE_MAPS_API_KEY</code> in your
+                    with the Places API (New) enabled as the secret <code className="font-mono font-bold">GOOGLE_PLACES_API_KEY</code> in your
                     Supabase Edge Function secrets. Without it, the Google Maps link above is the
                     recommended way to find nearby centres.
                   </span>

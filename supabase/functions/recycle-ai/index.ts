@@ -419,14 +419,14 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
+      const googleKey = Deno.env.get("GOOGLE_PLACES_API_KEY");
       if (!googleKey) {
         return new Response(
           JSON.stringify({
             facilities: [],
             hasApiAccess: false,
             message:
-              "Google Maps API key is not configured. Set the GOOGLE_MAPS_API_KEY secret to enable real facility search. You can still use the Google Maps link below to search manually.",
+              "Google Places API key is not configured. Set the GOOGLE_PLACES_API_KEY secret in your Supabase Edge Function secrets to enable real facility search. You can still use the Google Maps link below to search manually.",
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
