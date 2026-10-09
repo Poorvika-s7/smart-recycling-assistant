@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+@layer base {
+  :root {
+    --color-primary-50: #ecfdf5;
+    --color-primary-100: #d1fae5;
+    --color-primary-200: #a7f3d0;
+    --color-primary-300: #6ee7b7;
+    --color-primary-400: #34d399;
+    --color-primary-500: #10b981;
+    --color-primary-600: #059669;
+    --color-primary-700: #047857;
+    --color-primary-800: #065f46;
+    --color-primary-900: #064e3b;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+  .animate-pulse-soft {
+    animation: pulseSoft 2s ease-in-out infinite;
+  }
+  .animate-bounce-soft {
+    animation: bounceSoft 1.5s ease-in-out infinite;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pulseSoft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  @keyframes bounceSoft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-grid-pattern {
+    background-image: linear-gradient(rgba(16,185,129,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16,185,129,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .bg-mesh {
+    background-color: #f0fdf4;
+    background-image:
+      radial-gradient(at 20% 20%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(59, 130, 246, 0.06) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(56, 189, 248, 0.04) 0px, transparent 50%);
+  }
+}

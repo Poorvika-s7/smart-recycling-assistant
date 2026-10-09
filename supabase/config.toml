@@ -1,0 +1,3 @@
+[functions.recycle-ai]
+verify_jwt = false
+entrypoint = "./functions/recycle-ai/index.ts"
