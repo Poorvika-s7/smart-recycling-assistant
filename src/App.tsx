@@ -23,9 +23,17 @@ const NAV_ITEMS: { id: Page; label: string; icon: typeof Leaf }[] = [
 export default function App() {
   const [page, setPage] = useState<Page>('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [facilitiesCategory, setFacilitiesCategory] = useState<string | undefined>(undefined);
 
   const navigate = useCallback((p: Page) => {
     setPage(p);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const navigateToFacilities = useCallback((category?: string) => {
+    setFacilitiesCategory(category);
+    setPage('facilities');
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -95,9 +103,9 @@ export default function App() {
 
       <main className="flex-1">
         {page === 'home' && <HomePage onNavigate={navigate} />}
-        {page === 'scanner' && <ScannerPage onNavigate={navigate} />}
+        {page === 'scanner' && <ScannerPage onNavigate={navigate} onNavigateToFacilities={navigateToFacilities} />}
         {page === 'chat' && <ChatPage />}
-        {page === 'facilities' && <FacilitiesPage onNavigate={navigate} />}
+        {page === 'facilities' && <FacilitiesPage onNavigate={navigate} initialCategory={facilitiesCategory} />}
         {page === 'dashboard' && <DashboardPage onNavigate={navigate} />}
         {page === 'history' && <HistoryPage onNavigate={navigate} />}
         {page === 'about' && <AboutPage onNavigate={navigate} />}

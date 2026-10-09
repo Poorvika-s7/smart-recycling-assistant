@@ -322,6 +322,79 @@ Respond ONLY with valid JSON in this exact format:
   };
 }
 
+// ─── Google Places API (New) — Nearby Search ──────────────────────────────
+// https://developers.google.com/maps/documentation/places/web-service/nearby-search
+
+interface PlaceResult {
+  id: string;
+  displayName: { text: string; languageCode: string };
+  formattedAddress: string;
+  location: { latitude: number; longitude: number };
+  rating?: number;
+  userRatingCount?: number;
+  regularOpeningHours?: { weekdayDescriptions: string[] };
+  primaryTypeDisplayName?: { text: string };
+  types?: string[];
+}
+
+interface NearbyPlacesResponse {
+  places?: PlaceResult[];
+}
+
+async function searchGooglePlaces(
+  apiKey: string,
+  searchQuery: string,
+  lat: number,
+  lng: number,
+  radiusMeters: number,
+): Promise<PlaceResult[]> {
+  const url = "https://places.googleapis.com/v1/places:searchText";
+  const body = {
+    textQuery: searchQuery,
+    locationBias: {
+      circle: {
+        center: { latitude: lat, longitude: lng },
+        radius: radiusMeters,
+      },
+    },
+    pageSize: 20,
+    languageCode: "en",
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask":
+        "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.primaryTypeDisplayName,places.types",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Google Places API error: ${response.status} ${errText}`);
+  }
+
+  const data = (await response.json()) as NearbyPlacesResponse;
+  return data.places ?? [];
+}
+
+function haversineDistance(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number,
+): number {
+  const R = 6371; // km
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -329,6 +402,101 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
+
+    // ─── Facility search branch ──────────────────────────────────────────
+    if (body.action === "search_facilities") {
+      const { category, lat, lng, radius_km } = body as {
+        category?: string;
+        lat?: number;
+        lng?: number;
+        radius_km?: number;
+      };
+
+      if (lat === undefined || lng === undefined) {
+        return new Response(
+          JSON.stringify({ error: "Latitude and longitude are required." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const googleKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
+      if (!googleKey) {
+        return new Response(
+          JSON.stringify({
+            facilities: [],
+            hasApiAccess: false,
+            message:
+              "Google Maps API key is not configured. Set the GOOGLE_MAPS_API_KEY secret to enable real facility search. You can still use the Google Maps link below to search manually.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const categoryTerms: Record<string, string[]> = {
+        Plastic: ["plastic recycling center", "plastic waste collection"],
+        Paper: ["paper recycling center", "waste paper collection"],
+        Cardboard: ["cardboard recycling", "paper recycling center"],
+        Glass: ["glass recycling center", "glass bottle bank"],
+        Metal: ["scrap metal dealer", "metal recycling center"],
+        "Organic Waste": ["composting facility", "organic waste collection center"],
+        "Electronic Waste": ["e-waste collection center", "electronics recycling"],
+        Batteries: ["battery collection point", "battery recycling center"],
+        "Medical Waste": ["medical waste disposal facility", "biomedical waste collection"],
+        "Hazardous Waste": ["hazardous waste collection facility", "household hazardous waste disposal"],
+        Textile: ["textile recycling bin", "clothes collection point"],
+        Unknown: ["recycling center", "waste collection center"],
+      };
+
+      const searchQueries = categoryTerms[category || "Unknown"] || categoryTerms.Unknown;
+      const radiusMeters = (radius_km || 5) * 1000;
+
+      let allPlaces: PlaceResult[] = [];
+      for (const q of searchQueries) {
+        try {
+          const places = await searchGooglePlaces(googleKey, q, lat, lng, radiusMeters);
+          allPlaces = allPlaces.concat(places);
+        } catch {
+          // Continue with other queries
+        }
+      }
+
+      // Deduplicate by place id
+      const seen = new Set<string>();
+      const uniquePlaces = allPlaces.filter((p) => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
+
+      // Compute distances and sort
+      const facilities = uniquePlaces
+        .map((place) => {
+          const dist = haversineDistance(lat, lng, place.location.latitude, place.location.longitude);
+          return {
+            name: place.displayName?.text || "Unknown facility",
+            address: place.formattedAddress || "Address not available",
+            distance: `${dist.toFixed(1)} km`,
+            distanceKm: dist,
+            types: place.types?.slice(0, 5) || [],
+            category: category || "Unknown",
+            placeId: place.id,
+            lat: place.location.latitude,
+            lng: place.location.longitude,
+            verified: (place.userRatingCount ?? 0) > 0,
+            rating: place.rating,
+            openingHours: place.regularOpeningHours?.weekdayDescriptions,
+          };
+        })
+        .sort((a, b) => a.distanceKm - b.distanceKm)
+        .slice(0, 15);
+
+      return new Response(
+        JSON.stringify({ facilities, hasApiAccess: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ─── Waste analysis / chat branch (existing) ─────────────────────────
     const { item_name, location, image_base64, is_chat, chat_history, save_to_db, language, language_instruction } = body as {
       item_name?: string;
       location?: string;

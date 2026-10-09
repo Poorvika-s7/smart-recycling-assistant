@@ -4,12 +4,15 @@ export interface Facility {
   name: string;
   address: string;
   distance?: string;
+  distanceKm?: number;
   types: string[];
   category: string;
   placeId?: string;
   lat?: number;
   lng?: number;
   verified: boolean;
+  rating?: number;
+  openingHours?: string[];
 }
 
 const CATEGORY_SEARCH_TERMS: Record<string, string[]> = {
@@ -39,30 +42,63 @@ export function buildGoogleMapsDirectionsUrl(lat: number, lng: number): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
 
-export function buildGoogleMapsDirectionsUrlForQuery(query: string, location: GeoLocation): string {
-  const ll = `${location.latitude},${location.longitude}`;
-  return `https://www.google.com/maps/search/${encodeURIComponent(query)}?ll=${ll}`;
-}
-
 export interface FacilitySearchResult {
   facilities: Facility[];
   hasApiAccess: boolean;
   message?: string;
 }
 
+const EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recycle-ai`;
+
 export async function searchNearbyFacilities(
   category: string,
   location: GeoLocation,
-  radiusKm: number
+  radiusKm: number,
 ): Promise<FacilitySearchResult> {
-  const searchTerms = getSearchTermsForCategory(category);
-  const primaryQuery = searchTerms[0];
+  try {
+    const response = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'search_facilities',
+        category,
+        lat: location.latitude,
+        lng: location.longitude,
+        radius_km: radiusKm,
+      }),
+    });
 
-  // No Google Maps API key is available in this environment.
-  // We provide a Google Maps search link instead of fabricating facilities.
-  return {
-    facilities: [],
-    hasApiAccess: false,
-    message: `No facility API is configured. Use the "Open in Google Maps" button below to search for nearby ${category.toLowerCase()} disposal centres using your current location.`,
-  };
+    if (!response.ok) {
+      return {
+        facilities: [],
+        hasApiAccess: false,
+        message: `Search failed (server error ${response.status}). You can still use the Google Maps link below to search manually.`,
+      };
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      return {
+        facilities: [],
+        hasApiAccess: false,
+        message: data.error,
+      };
+    }
+
+    return {
+      facilities: data.facilities || [],
+      hasApiAccess: data.hasApiAccess ?? false,
+      message: data.message,
+    };
+  } catch {
+    return {
+      facilities: [],
+      hasApiAccess: false,
+      message: 'Could not reach the server for facility search. You can still use the Google Maps link below to search manually.',
+    };
+  }
 }

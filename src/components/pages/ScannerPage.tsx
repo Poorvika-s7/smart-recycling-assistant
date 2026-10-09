@@ -35,6 +35,7 @@ type ScanMode = 'describe' | 'upload' | 'camera';
 
 interface Props {
   onNavigate: (page: Page) => void;
+  onNavigateToFacilities?: (category?: string) => void;
 }
 
 const QUICK_ITEMS = [
@@ -50,7 +51,7 @@ const QUICK_ITEMS = [
   'Expired medicine',
 ];
 
-export default function ScannerPage({ onNavigate }: Props) {
+export default function ScannerPage({ onNavigate, onNavigateToFacilities }: Props) {
   const [mode, setMode] = useState<ScanMode>('describe');
   const [itemName, setItemName] = useState('');
   const [location, setLocation] = useState('');
@@ -171,7 +172,11 @@ export default function ScannerPage({ onNavigate }: Props) {
 
   const handleFindFacilities = () => {
     if (result) {
-      onNavigate('facilities');
+      if (onNavigateToFacilities) {
+        onNavigateToFacilities(result.category);
+      } else {
+        onNavigate('facilities');
+      }
     }
   };
 
