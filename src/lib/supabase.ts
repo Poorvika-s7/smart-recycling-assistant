@@ -17,6 +17,7 @@ export interface Scan {
   disposal_instructions: string;
   reuse_ideas: string;
   environmental_advice: string;
+  safety_precautions: string | null;
   estimated_co2_saved_kg: number;
   estimated_waste_diverted_kg: number;
   analysis_mode: AnalysisMode;
@@ -32,6 +33,7 @@ export interface AnalysisResult {
   disposal_instructions: string;
   reuse_ideas: string;
   environmental_advice: string;
+  safety_precautions: string;
   estimated_co2_saved_kg: number;
   estimated_waste_diverted_kg: number;
   confidence: 'high' | 'medium' | 'low';
@@ -52,6 +54,7 @@ export interface NewScanInput {
   disposal_instructions: string;
   reuse_ideas: string;
   environmental_advice: string;
+  safety_precautions: string | null;
   estimated_co2_saved_kg: number;
   estimated_waste_diverted_kg: number;
   analysis_mode: AnalysisMode;
